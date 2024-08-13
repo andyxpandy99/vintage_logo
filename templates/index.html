@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Generator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .note {
+            font-size: small;
+            color: gray;
+        }
+        form {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        const fundsList = {{ funds_list|tojson|safe }};
+        const directInvestmentsList = {{ direct_investments_list|tojson|safe }};
+        const selectedType = "{{ investment_type|default('fund') }}";
+        const selectedName = "{{ investment_name|default('') }}";
+
+        function updateInvestmentNames() {
+            const investmentType = document.getElementById('investment_type').value;
+            const investmentNameSelect = document.getElementById('investment_name');
+            investmentNameSelect.innerHTML = '';
+
+            const list = investmentType === 'fund' ? fundsList : directInvestmentsList;
+
+            list.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.text = name;
+                if (name === selectedName) {
+                    option.selected = true;
+                }
+                investmentNameSelect.appendChild(option);
+            });
+        }
+    </script>
+</head>
+<body onload="updateInvestmentNames()">
+    <div class="container">
+        <h1>Corporation Logo Generator</h1>
+        <p class="note">* For public and relatively well-known private corporations that exist on Wikipedia</p>
+        <form method="POST">
+            <label for="company_name">Enter Corporation Name:</label>
+            <input type="text" id="company_name" name="company_name" value="{{ company_name }}">
+            <button type="submit">Get Logo</button>
+        </form>
+
+        {% if wikipedia_url and logo_url %}
+            <h2>Results for {{ company_name }}:</h2>
+            <p>About: <a href="{{ wikipedia_url }}" target="_blank">{{ wikipedia_url }}</a></p>
+            <p>Logo URL: <a href="{{ logo_url }}" target="_blank"><img src="{{ logo_url }}" alt="Company Logo"></a></p>
+        {% elif error %}
+            <p>{{ error }}</p>
+        {% endif %}
+
+        <hr>
+
+        <h1>Vintage Portfolio Logo Generator</h1>
+        <form method="POST">
+            <label for="investment_type">Select Type:</label>
+            <select id="investment_type" name="investment_type" onchange="updateInvestmentNames()">
+                <option value="fund" {% if investment_type == 'fund' %}selected{% endif %}>Fund Investment</option>
+                <option value="direct" {% if investment_type == 'direct' %}selected{% endif %}>Direct Investment</option>
+            </select>
+            <label for="investment_name">Select Name:</label>
+            <select id="investment_name" name="investment_name">
+            </select>
+            <button type="submit">Get Info</button>
+        </form>
+
+        {% if investment_link and investment_logo_url %}
+            <h2>Results for {{ investment_name }}:</h2>
+            <p>Website URL: <a href="{{ investment_link }}" target="_blank">{{ investment_link }}</a></p>
+            <p>Logo: <a href="{{ investment_logo_url }}" target="_blank"><img src="{{ investment_logo_url }}" alt="Investment Logo"></a></p>
+        {% elif error %}
+            <p>{{ error }}</p>
+        {% endif %}
+
+        <hr>
+
+        <h1>Generate CSV for Vintage Portfolio</h1>
+        <form method="POST">
+            <label for="investment_type_csv">Select Type:</label>
+            <select id="investment_type_csv" name="investment_type_csv">
+                <option value="fund" {% if investment_type_csv == 'fund' %}selected{% endif %}>Fund Investment</option>
+                <option value="direct" {% if investment_type_csv == 'direct' %}selected{% endif %}>Direct Investment</option>
+            </select>
+            <button type="submit" name="generate_csv" value="true">Generate CSV</button>
+        </form>
+    </div>
+</body>
+</html>
